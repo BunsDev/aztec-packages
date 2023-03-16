@@ -14,7 +14,8 @@
     "p2p",
     "prover-client",
     "public-client",
+    "rpc-client",
     "sequencer-client",
-    "wallet"
+    "world-state"
   ]
 }
