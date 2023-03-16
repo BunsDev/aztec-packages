@@ -14,5 +14,5 @@ The Aztec 3 system consists of the following sub projects.
 - `p2p`
 - `prover-client`
 - `public-client`
+- `rpc-client`
 - `sequencer-client`
-- `wallet`

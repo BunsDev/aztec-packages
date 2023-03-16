@@ -25,7 +25,7 @@ PROJECTS=(
   # p2p:yarn-project
   # prover-client:yarn-project
   # public-client:yarn-project
+  # rpc-client:yarn-project
   # sequencer-client:yarn-project
-  # wallet:yarn-project
   # world-state:yarn-project
 )
