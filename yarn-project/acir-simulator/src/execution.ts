@@ -89,7 +89,7 @@ export class Execution {
       getNotes2: async ([, storageSlot]: ACVMField[]) => {
         return await this.getNotes(this.contractAddress, storageSlot, 2);
       },
-      getRandomField: () => Promise.resolve([toACVMField(Fr.random())]),
+      rand: () => Promise.resolve([toACVMField(Fr.random())]),
       notifyCreatedNote: ([storageSlot, ownerX, ownerY, ...acvmPreimage]: ACVMField[]) => {
         newNotePreimages.push({
           preimage: acvmPreimage.map(f => fromACVMField(f)),
@@ -122,7 +122,6 @@ export class Execution {
         return toAcvmCallPrivateStackItem(childExecutionResult.callStackItem);
       },
     });
-
     const publicInputs = extractPublicInputs(partialWitness, acir);
 
     const callStackItem = new PrivateCallStackItem(this.contractAddress, this.functionData, publicInputs);

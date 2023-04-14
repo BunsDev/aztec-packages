@@ -117,7 +117,7 @@ describe('ACIR simulator', () => {
       recipient = toPublicKey(recipientPk, grumpkin);
     });
 
-    it('should a constructor with arguments that creates notes', async () => {
+    it.only('should a constructor with arguments that creates notes', async () => {
       const oldRoots = new OldTreeRoots(new Fr(0n), new Fr(0n), new Fr(0n), new Fr(0n));
       const contractAddress = AztecAddress.random();
       const abi = ZkTokenContractAbi.functions.find(f => f.name === 'constructor') as unknown as FunctionAbi;

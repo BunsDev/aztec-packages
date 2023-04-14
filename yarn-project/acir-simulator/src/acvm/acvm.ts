@@ -10,7 +10,7 @@ export const ONE_ACVM_FIELD: ACVMField = `0x${'00'.repeat(31)}01`;
 export interface ACIRCallback {
   getSecretKey(params: ACVMField[]): Promise<ACVMField[]>;
   getNotes2(params: ACVMField[]): Promise<ACVMField[]>;
-  getRandomField(): Promise<ACVMField[]>;
+  rand(): Promise<ACVMField[]>;
   notifyCreatedNote(params: ACVMField[]): Promise<ACVMField[]>;
   notifyNullifiedNote(params: ACVMField[]): Promise<ACVMField[]>;
   privateFunctionCall(params: ACVMField[]): Promise<ACVMField[]>;
@@ -27,9 +27,12 @@ export const acvm: execute = async (acir, initialWitness, callback) => {
     acir,
     initialWitness,
     async (name: string, args: ACVMField[]) => {
+      console.log(`Callback ${name} called with args:`, args);
       if (!(name in callback)) throw new Error(`Callback ${name} not found`);
       const result = await callback[name as keyof ACIRCallback](args);
-      return result;
+      const emptyFields = Array(Math.max(0, 2 - result.length)).fill(ZERO_ACVM_FIELD);
+      console.log(`Callback ${name} will return:`, result.concat(emptyFields));
+      return result.concat(emptyFields);
     },
   );
   return Promise.resolve({ partialWitness });
