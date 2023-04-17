@@ -5,7 +5,6 @@ import { EthereumRpc } from '@aztec/ethereum.js/eth_rpc';
 import { WalletProvider } from '@aztec/ethereum.js/provider';
 import { createDebugLogger } from '@aztec/foundation';
 import { ZkTokenContractAbi } from '@aztec/noir-contracts/examples';
-import { ContractAbi } from '@aztec/noir-contracts';
 import { BarretenbergWasm } from '@aztec/barretenberg.js/wasm';
 import { pedersenCompressInputs } from '@aztec/barretenberg.js/crypto';
 import { getConfigEnvVars } from '@aztec/aztec-node';
@@ -105,10 +104,10 @@ describe('e2e_zk_token_contract', () => {
   const deployContract = async (initialBalance = 0n, owner = { x: 0n, y: 0n }) => {
     // TODO: Remove explicit casts
     logger(`Deploying L2 contract...`);
-    const deployer = new ContractDeployer(ZkTokenContractAbi as ContractAbi, aztecRpcServer);
+    const deployer = new ContractDeployer(ZkTokenContractAbi, aztecRpcServer);
     const tx = deployer.deploy(initialBalance, owner).send();
     const receipt = await tx.getReceipt();
-    contract = new Contract(receipt.contractAddress!, ZkTokenContractAbi as ContractAbi, aztecRpcServer);
+    contract = new Contract(receipt.contractAddress!, ZkTokenContractAbi, aztecRpcServer);
     await tx.isMined(0, 0.1);
     await tx.getReceipt();
     logger('L2 contract deployed');

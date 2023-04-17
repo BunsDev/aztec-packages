@@ -61,7 +61,7 @@ describe('ACIR simulator', () => {
       );
       const result = await acirSimulator.run(
         txRequest,
-        TestContractAbi.functions[0] as FunctionAbi,
+        TestContractAbi.functions[0],
         AztecAddress.ZERO,
         EthAddress.ZERO,
         oldRoots,
@@ -117,10 +117,10 @@ describe('ACIR simulator', () => {
       recipient = toPublicKey(recipientPk, grumpkin);
     });
 
-    it.only('should a constructor with arguments that creates notes', async () => {
+    it('should a constructor with arguments that creates notes', async () => {
       const oldRoots = new OldTreeRoots(new Fr(0n), new Fr(0n), new Fr(0n), new Fr(0n));
       const contractAddress = AztecAddress.random();
-      const abi = ZkTokenContractAbi.functions.find(f => f.name === 'constructor') as unknown as FunctionAbi;
+      const abi = ZkTokenContractAbi.functions.find(f => f.name === 'constructor')!;
 
       const txRequest = new TxRequest(
         AztecAddress.random(),
@@ -147,7 +147,7 @@ describe('ACIR simulator', () => {
     it('should run the mint function', async () => {
       const oldRoots = new OldTreeRoots(new Fr(0n), new Fr(0n), new Fr(0n), new Fr(0n));
       const contractAddress = AztecAddress.random();
-      const abi = ZkTokenContractAbi.functions.find(f => f.name === 'mint') as unknown as FunctionAbi;
+      const abi = ZkTokenContractAbi.functions.find(f => f.name === 'mint')!;
 
       const txRequest = new TxRequest(
         AztecAddress.random(),
@@ -177,7 +177,7 @@ describe('ACIR simulator', () => {
 
       const contractAddress = AztecAddress.random();
       const amountToTransfer = 100n;
-      const abi = ZkTokenContractAbi.functions.find(f => f.name === 'transfer') as unknown as FunctionAbi;
+      const abi = ZkTokenContractAbi.functions.find(f => f.name === 'transfer')!;
 
       const tree = await StandardMerkleTree.new(db, pedersen, 'privateData', PRIVATE_DATA_TREE_HEIGHT);
       const preimages = [buildNote(60n, owner), buildNote(80n, owner)];
@@ -243,7 +243,7 @@ describe('ACIR simulator', () => {
       const contractAddress = AztecAddress.random();
       const amountToTransfer = 100n;
       const balance = 160n;
-      const abi = ZkTokenContractAbi.functions.find(f => f.name === 'transfer') as unknown as FunctionAbi;
+      const abi = ZkTokenContractAbi.functions.find(f => f.name === 'transfer')!;
 
       const tree = await StandardMerkleTree.new(db, pedersen, 'privateData', PRIVATE_DATA_TREE_HEIGHT);
       const preimages = [buildNote(balance, owner)];
@@ -294,7 +294,7 @@ describe('ACIR simulator', () => {
     const txContext = new TxContext(false, false, true, contractDeploymentData);
 
     it('child function should be callable', async () => {
-      const abi = ChildAbi.functions.find(f => f.name === 'value') as unknown as FunctionAbi;
+      const abi = ChildAbi.functions.find(f => f.name === 'value')!;
 
       const txRequest = new TxRequest(
         AztecAddress.random(),
@@ -311,8 +311,8 @@ describe('ACIR simulator', () => {
     });
 
     it('parent should call child', async () => {
-      const childAbi = ChildAbi.functions.find(f => f.name === 'value') as unknown as FunctionAbi;
-      const parentAbi = ParentAbi.functions.find(f => f.name === 'entryPoint') as unknown as FunctionAbi;
+      const childAbi = ChildAbi.functions.find(f => f.name === 'value')!;
+      const parentAbi = ParentAbi.functions.find(f => f.name === 'entryPoint')!;
       const childAddress = AztecAddress.random();
       const childSelector = Buffer.alloc(4, 1); // should match the call
 

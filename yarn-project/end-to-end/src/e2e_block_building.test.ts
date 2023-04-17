@@ -3,7 +3,6 @@ import { AztecRPCServer, ContractDeployer, Fr, TxStatus } from '@aztec/aztec.js'
 import { EthereumRpc } from '@aztec/ethereum.js/eth_rpc';
 import { WalletProvider } from '@aztec/ethereum.js/provider';
 import { EthAddress, createDebugLogger } from '@aztec/foundation';
-import { ContractAbi } from '@aztec/noir-contracts';
 import { TestContractAbi } from '@aztec/noir-contracts/examples';
 import times from 'lodash.times';
 import { createAztecRpcServer } from './create_aztec_rpc_client.js';
@@ -22,7 +21,7 @@ describe('e2e_block_building', () => {
   let rollupAddress: EthAddress;
   let unverifiedDataEmitterAddress: EthAddress;
 
-  const abi = TestContractAbi as ContractAbi;
+  const abi = TestContractAbi;
 
   beforeEach(async () => {
     provider = createProvider(config.rpcUrl, MNEMONIC, 1);
