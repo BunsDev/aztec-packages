@@ -1,10 +1,9 @@
-import { createDebugLogger } from '@aztec/foundation';
+import { RunningPromise, createDebugLogger } from '@aztec/foundation';
 import { P2P } from '@aztec/p2p';
 import { Tx, UnverifiedData } from '@aztec/types';
 import { MerkleTreeId, WorldStateStatus, WorldStateSynchroniser } from '@aztec/world-state';
 import times from 'lodash.times';
 import { BlockBuilder } from '../block_builder/index.js';
-import { RunningPromise } from '../deps/running_promise.js';
 import { makeEmptyTx } from '../index.js';
 import { L1Publisher } from '../publisher/l1-publisher.js';
 import { ceilPowerOfTwo } from '../utils.js';
@@ -22,7 +21,7 @@ import { SequencerConfig } from './config.js';
 export class Sequencer {
   private runningPromise?: RunningPromise;
   private pollingIntervalMs: number;
-  private maxTxsPerBlock = 4;
+  private maxTxsPerBlock = 32;
   private lastBlockNumber = -1;
   private state = SequencerState.STOPPED;
 
@@ -35,12 +34,15 @@ export class Sequencer {
     private log = createDebugLogger('aztec:sequencer'),
   ) {
     this.pollingIntervalMs = config?.transactionPollingInterval ?? 1_000;
+    if (config?.maxTxsPerBlock) {
+      this.maxTxsPerBlock = config.maxTxsPerBlock;
+    }
   }
 
   public async start() {
     await this.initialSync();
 
-    this.runningPromise = new RunningPromise(this.work.bind(this), { pollingInterval: this.pollingIntervalMs });
+    this.runningPromise = new RunningPromise(this.work.bind(this), this.pollingIntervalMs);
     this.runningPromise.start();
     this.state = SequencerState.IDLE;
     this.log('Sequencer started');
