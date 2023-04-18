@@ -11,7 +11,7 @@ struct NoteGetterData {
 }
 
 fn note_getter_data_len() -> comptime Field {
-    6 + 1 + crate::PRIVATE_DATA_TREE_HEIGHT + 1
+    crate::notes::value_note::NOTE_LEN + 1 + crate::PRIVATE_DATA_TREE_HEIGHT + 1
 }
 
 fn make_note_getter_data(fields: [Field], start: comptime Field) -> NoteGetterData {

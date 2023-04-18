@@ -2,6 +2,8 @@
 
 use crate::types::point::Point;
 
+global NOTE_LEN = 6;
+
 #[oracle(rand)]
 fn rand_oracle(_idx: Field) -> [Field; 2] {}
 
@@ -58,6 +60,16 @@ impl Note {
         }
     }
 
+    fn from_fields(fields: [Field; NOTE_LEN]) -> Note {
+        Note {
+            is_real: fields[0] as bool,
+            nonce: fields[1],
+            owner: Point::new(fields[2], fields[3]),
+            randomness: fields[4],
+            value: fields[5],
+        }
+    }
+
     fn compute_note_hash(self) -> Field {
         dep::std::hash::pedersen([
             crate::NoteHash,
@@ -81,5 +93,13 @@ impl Note {
         constrain (check_public_key.x == self.owner.x) & (check_public_key.y == self.owner.y);
 
         dep::std::hash::pedersen([crate::Nullifier, note_hash, secret_key])[0]
+    }
+
+    fn reduce_balance<N>(notes: [Note; N]) -> Field {
+        let mut total_value = 0;
+        for i in 0..N {
+            total_value += notes[i].value;
+        }
+        total_value
     }
 }

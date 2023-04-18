@@ -119,4 +119,9 @@ contract PrivateToken {
         outputs.finish(inputs)
     }
 
+    unconstrained fn get_balance(owner: Point) -> pub Field {
+        let owner_balance = balances.at(owner.x);
+        owner_balance.reduce_balance()
+    }
+
 }

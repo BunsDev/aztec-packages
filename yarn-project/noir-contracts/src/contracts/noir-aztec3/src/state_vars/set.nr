@@ -6,6 +6,7 @@ use crate::types::point::Point;
 use crate::state_vars::note_getter_data::NoteGetterData;
 use crate::state_vars::note_getter_data::make_note_getter_data;
 use crate::state_vars::note_getter_data::note_getter_data_len;
+use crate::utils::arr_copy_slice;
 
 #[oracle(notifyCreatedNote)]
 fn notify_created_note_oracle(
@@ -39,22 +40,45 @@ unconstrained fn notify_nullified_note(
 
 #[oracle(getNotes2)]
 fn get_notes_2_oracle(
-    _contract_address: Field,
     _storage_slot: Field,
 ) -> [Field; 32] {}
 
 unconstrained fn get_notes_2_internal(
-    contract_address: Field,
     storage_slot: Field,
 ) -> [Field; 32] {
-    get_notes_2_oracle(contract_address, storage_slot)
+    get_notes_2_oracle(storage_slot)
 }
 
-fn get_2_notes(contract_address: Field, storage_slot: Field) -> (NoteGetterData, NoteGetterData) {
-    let fields = get_notes_2_internal(contract_address, storage_slot);
+fn get_2_notes(storage_slot: Field) -> (NoteGetterData, NoteGetterData) {
+    let fields = get_notes_2_internal(storage_slot);
     let data1 = make_note_getter_data(fields, 0);
     let data2 = make_note_getter_data(fields, note_getter_data_len());
     (data1, data2)
+}
+
+global NOTES_PER_PAGE = 100;
+
+// Reads total count and NOTES_PER_PAGE notes with pagination support
+// The hardcoded 601 is due to the lack of computed globals and variable-length arrays
+#[oracle(readNotesPage)]
+fn read_notes_page(
+    _storage_slot: Field,
+    _offset: Field,
+) -> [Field; 601] {}
+
+fn read_notes_page_internal(
+    storage_slot: Field,
+    offset: Field,
+) -> (Field, [Note; NOTES_PER_PAGE]){
+    let fields = read_notes_page(storage_slot, offset);
+    let total_notes = fields[0];
+    let mut notes = [Note::dummy(); NOTES_PER_PAGE];
+    for i in 0..NOTES_PER_PAGE {
+        let read_offset: comptime Field = 1 + i*crate::notes::value_note::NOTE_LEN;
+        let note = Note::from_fields(arr_copy_slice(fields, [0; crate::notes::value_note::NOTE_LEN], read_offset));
+        notes[i] = note;
+    };
+    (total_notes, notes)
 }
 
 struct Set {
@@ -78,7 +102,6 @@ impl Set {
 
     // The `2` in the name is the number of notes returned
     fn get_2(self, inputs: Inputs, mut outputs: Outputs) -> (Outputs, (Note, Note)) {
-        let contract_address = inputs.call_context.storage_contract_address;
         let storage_slot = self.storage_slot;
 
         // let note_getter_data: [NoteGetterData; 2] = ORACLE::get_2_notes(contract_address, storage_slot);
@@ -86,7 +109,7 @@ impl Set {
         //     NoteGetterData { note: Note::dummy(), leaf_index: 0, sibling_path: [1, 2, 3, 4, 5], root: 1 },
         //     NoteGetterData { note: Note::dummy(), leaf_index: 1, sibling_path: [1, 2, 3, 4, 5], root: 1 },
         // );
-        let note_getter_data = get_2_notes(contract_address, storage_slot);
+        let note_getter_data = get_2_notes(storage_slot);
 
         // Forwarded vars added due to https://github.com/noir-lang/noir/issues/1088
         // let process_data = |data, storage_slot_forwarded, contract_address_forwarded| {
@@ -145,5 +168,21 @@ impl Set {
         constrain notify_nullified_note(storage_slot, nullifier, note) == 0;
         outputs = outputs.push_new_nullifier(nullifier);
         outputs.push_nullified_note(note)
+    }
+
+    unconstrained fn reduce_balance(self) -> Field {
+        let storage_slot = self.storage_slot;
+        let mut balance = 0;
+
+        let (total_notes, mut current_batch) = read_notes_page_internal(storage_slot, 0);
+
+        let total_iterations = (total_notes / NOTES_PER_PAGE) + 1;
+
+        for i in 0..total_iterations {
+            current_batch = read_notes_page_internal(storage_slot, i * NOTES_PER_PAGE).1;
+            balance += Note::reduce_balance(current_batch);
+        }
+
+        balance
     }
 }
