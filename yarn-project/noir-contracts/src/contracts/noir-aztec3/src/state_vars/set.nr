@@ -61,24 +61,16 @@ global NOTES_PER_PAGE = 100;
 // Reads total count and NOTES_PER_PAGE notes with pagination support
 // The hardcoded 601 is due to the lack of computed globals and variable-length arrays
 #[oracle(readNotesPage)]
-fn read_notes_page(
+fn read_100_note_values_oracle(
     _storage_slot: Field,
     _offset: Field,
-) -> [Field; 601] {}
+) -> [Field; 100] {}
 
-fn read_notes_page_internal(
+unconstrained fn read_100_note_values(
     storage_slot: Field,
     offset: Field,
-) -> (Field, [Note; NOTES_PER_PAGE]){
-    let fields = read_notes_page(storage_slot, offset);
-    let total_notes = fields[0];
-    let mut notes = [Note::dummy(); NOTES_PER_PAGE];
-    for i in 0..NOTES_PER_PAGE {
-        let read_offset: comptime Field = 1 + i*crate::notes::value_note::NOTE_LEN;
-        let note = Note::from_fields(arr_copy_slice(fields, [0; crate::notes::value_note::NOTE_LEN], read_offset));
-        notes[i] = note;
-    };
-    (total_notes, notes)
+) -> [Field; 100] {
+    read_100_note_values_oracle(storage_slot, offset)
 }
 
 struct Set {
@@ -172,17 +164,12 @@ impl Set {
 
     unconstrained fn reduce_balance(self) -> Field {
         let storage_slot = self.storage_slot;
-        let mut balance = 0;
 
-        let (total_notes, mut current_batch) = read_notes_page_internal(storage_slot, 0);
-
-        let total_iterations = (total_notes / NOTES_PER_PAGE) + 1;
-
-        for i in 0..total_iterations {
-            current_batch = read_notes_page_internal(storage_slot, i * NOTES_PER_PAGE).1;
-            balance += Note::reduce_balance(current_batch);
+        let mut sum: Field = 0;
+        let values = read_100_note_values(storage_slot, 0);
+        for i in 0..100 {
+            sum += values[i];
         }
-
-        balance
+        sum
     }
 }
