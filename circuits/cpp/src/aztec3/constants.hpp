@@ -59,33 +59,43 @@ constexpr size_t FUNCTION_SELECTOR_NUM_BYTES = 4;  // must be <= 31
 // Enumerate the hash_indices which are used for pedersen hashing
 // Start from 1 to avoid the default generators.
 enum GeneratorIndex {
-    COMMITMENT = 1,
-    COMMITMENT_PLACEHOLDER,  // for omitting some elements of the commitment when partially committing.
-    OUTER_COMMITMENT,
-    NULLIFIER_HASHED_PRIVATE_KEY,
-    NULLIFIER,
-    INITIALISATION_NULLIFIER,
-    OUTER_NULLIFIER,
-    STATE_READ,
-    STATE_TRANSITION,
-    VK,
-    FUNCTION_DATA,
-    FUNCTION_LEAF,
-    CONTRACT_DEPLOYMENT_DATA,
-    CONSTRUCTOR,
-    CONSTRUCTOR_ARGS,
-    CONTRACT_ADDRESS,
-    CONTRACT_LEAF,
-    CALL_CONTEXT,
-    CALL_STACK_ITEM,
-    CALL_STACK_ITEM_2,  // see function where it's used for explanation
-    L2_TO_L1_MSG,
-    PRIVATE_CIRCUIT_PUBLIC_INPUTS,
-    PUBLIC_CIRCUIT_PUBLIC_INPUTS,
-    TX_CONTEXT,
-    TX_REQUEST,
-    PUBLIC_LEAF_INDEX,
-    PUBLIC_DATA_LEAF,
+    /**
+     * Indices with size ≤ 8
+     */
+    COMMITMENT = 1,                // Size = 7 (unused)
+    COMMITMENT_PLACEHOLDER,        // size = 1 (unused), for omitting some elements of commitment when partially comm
+    OUTER_COMMITMENT,              // Size = 2
+    NULLIFIER_HASHED_PRIVATE_KEY,  // Size = 1 (unused)
+    NULLIFIER,                     // Size = 4 (unused)
+    INITIALISATION_NULLIFIER,      // Size = 2 (unused)
+    OUTER_NULLIFIER,               // Size = 2
+    STATE_READ,                    // Size = 2 (unused)
+    STATE_TRANSITION,              // Size = 3 (unused)
+    FUNCTION_DATA,                 // Size = 3
+    FUNCTION_LEAF,                 // Size = 4
+    CONTRACT_DEPLOYMENT_DATA,      // Size = 4
+    CONSTRUCTOR,                   // Size = 3
+    CONSTRUCTOR_ARGS,              // Size = 8
+    CONTRACT_ADDRESS,              // Size = 4
+    CONTRACT_LEAF,                 // Size = 3
+    CALL_CONTEXT,                  // Size = 6
+    CALL_STACK_ITEM,               // Size = 3
+    CALL_STACK_ITEM_2,             // Size = ? (unused), // TODO see function where it's used for explanation
+    L2_TO_L1_MSG,                  // Size = 2 (unused)
+    TX_CONTEXT,                    // Size = 4
+    PUBLIC_LEAF_INDEX,             // Size = 2 (unused)
+    PUBLIC_DATA_LEAF,              // Size = ? (unused) // TODO what's the expected size? Assuming ≤ 8
+    SIGN_TX_REQUEST,               // Size = 7
+    /**
+     * Indices with size ≤ 16
+     */
+    TX_REQUEST = 33,  // Size = 14
+    /**
+     * Indices with size ≤ 40
+     */
+    VK = 41,                        // Size = 35
+    PRIVATE_CIRCUIT_PUBLIC_INPUTS,  // Size = 39
+    PUBLIC_CIRCUIT_PUBLIC_INPUTS,   // Size = 32 (unused)
 };
 
 enum StorageSlotGeneratorIndex {
