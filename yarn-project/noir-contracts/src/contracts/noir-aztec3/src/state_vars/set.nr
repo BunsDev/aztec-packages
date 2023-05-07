@@ -1,7 +1,8 @@
 use dep::std;
 use crate::abi::Inputs;
 use crate::context::PrivateFunctionContext;
-use crate::notes::value_note::Note;
+use crate::notes::value_note::ValueNote;
+use crate::types::option::Option;
 use crate::types::point::Point;
 use crate::state_vars::note_getter_data::NoteGetterData;
 use crate::state_vars::note_getter_data::make_note_getter_data;
@@ -11,13 +12,13 @@ use crate::state_vars::note_getter_data::note_getter_data_len;
 fn notify_created_note_oracle(
     _storage_slot: Field,
     _owner: Point,
-    _note: Note,
+    _note: ValueNote,
 ) -> Field {}
 
 unconstrained fn notify_created_note(
     storage_slot: Field,
     owner: Point,
-    note: Note,
+    note: ValueNote,
 ) -> Field {
     notify_created_note_oracle(storage_slot, owner, note)
 }
@@ -26,13 +27,13 @@ unconstrained fn notify_created_note(
 fn notify_nullified_note_oracle(
     _storage_slot: Field,
     _nullifier: Field,
-    _note: Note,
+    _note: ValueNote,
 ) -> Field {}
 
 unconstrained fn notify_nullified_note(
     storage_slot: Field,
     nullifier: Field,
-    note: Note,
+    note: ValueNote,
 ) -> Field {
     notify_nullified_note_oracle(storage_slot, nullifier, note)
 }
@@ -64,7 +65,7 @@ impl Set {
         Set { storage_slot }
     }
 
-    fn insert(self, mut context: PrivateFunctionContext, note: Note) -> PrivateFunctionContext {
+    fn insert(self, mut context: PrivateFunctionContext, note: ValueNote) -> PrivateFunctionContext {
         let storage_slot = self.storage_slot;
 
         let note_hash = note.compute_note_hash();
@@ -74,13 +75,13 @@ impl Set {
     }
 
     // The `2` in the name is the number of notes returned
-    fn get_2(self, inputs: Inputs, mut context: PrivateFunctionContext) -> (PrivateFunctionContext, (Note, Note)) {
+    fn get_2(self, inputs: Inputs, mut context: PrivateFunctionContext) -> (PrivateFunctionContext, [Option<ValueNote>; 2]) {
         let storage_slot = self.storage_slot;
 
         // let note_getter_data: [NoteGetterData; 2] = ORACLE::get_2_notes(contract_address, storage_slot);
         // let note_getter_data = (
-        //     NoteGetterData { note: Note::dummy(), leaf_index: 0, sibling_path: [1, 2, 3, 4, 5], root: 1 },
-        //     NoteGetterData { note: Note::dummy(), leaf_index: 1, sibling_path: [1, 2, 3, 4, 5], root: 1 },
+        //     NoteGetterData { note: ValueNote::dummy(), leaf_index: 0, sibling_path: [1, 2, 3, 4, 5], root: 1 },
+        //     NoteGetterData { note: ValueNote::dummy(), leaf_index: 1, sibling_path: [1, 2, 3, 4, 5], root: 1 },
         // );
         let note_getter_data = get_2_notes(storage_slot);
 
@@ -117,12 +118,33 @@ impl Set {
         constrain note_getter_data.0.root == inputs.old_private_data_tree_root;
         constrain note_getter_data.1.root == inputs.old_private_data_tree_root;
 
-        let notes = (note_getter_data.0.note, note_getter_data.1.note);
-        (context, notes)
+        // TEMPORARY, because I don't know how to modify the oracles. Ideally, we could return `Option<ValueNote>` types directly from the oracles
+        let mut opt_notes: [Option<ValueNote>; 2] = [Option::new_as_none(ValueNote::dummy()), Option::new_as_none(ValueNote::dummy())];
+
+        let notes: [ValueNote; 2] = [note_getter_data.0.note, note_getter_data.1.note];
+
+        if notes[0].is_real == false {
+            opt_notes[0] = Option::new_as_none(ValueNote::dummy());
+        } else {
+            opt_notes[0] = Option::new(notes[0]);
+        }
+        // TODO: no idea why I need this constraint here... or what the error means when you remove it.
+        constrain opt_notes[0].is_none() == !notes[0].is_real;
+
+        if notes[1].is_real == false {
+            opt_notes[1] = Option::new_as_none(ValueNote::dummy());
+        } else {
+            opt_notes[1] = Option::new(notes[1]);
+        }
+        constrain opt_notes[1].is_none() == !notes[1].is_real;
+
+        // End of TEMPORARY
+
+        (context, opt_notes)
     }
 
 
-    fn remove(self, inputs: Inputs, mut context: PrivateFunctionContext, note: Note) -> PrivateFunctionContext {
+    fn remove(self, inputs: Inputs, mut context: PrivateFunctionContext, note: ValueNote) -> PrivateFunctionContext {
         let contract_address = inputs.call_context.storage_contract_address;
         let storage_slot = self.storage_slot;
 

@@ -18,7 +18,7 @@ unconstrained fn get_secret_key(owner: Point) -> Field {
     get_secret_key_oracle(owner)
 }
 
-struct Note {
+struct ValueNote {
     value: Field,
     owner: Point,
     randomness: Field,
@@ -26,9 +26,9 @@ struct Note {
     is_real: bool
 }
 
-impl Note {
-    fn dummy() -> Note {
-        Note {
+impl ValueNote {
+    fn dummy() -> ValueNote {
+        ValueNote {
             value: 0,
             owner: Point { x: 0, y: 0 },
             randomness: 0,
@@ -39,8 +39,8 @@ impl Note {
 
     fn deserialize(
         fields: [Field; NOTE_LEN],
-    ) -> Note {
-        Note {
+    ) -> ValueNote {
+        ValueNote {
             is_real: fields[0] as bool,
             nonce: fields[1],
             owner: Point {
@@ -52,7 +52,7 @@ impl Note {
         }
     }
 
-    fn new(value: Field, owner: Point) -> Note {
+    fn new(value: Field, owner: Point) -> ValueNote {
         // let randomness = ORACLE::rand(); // ORACLE CALL
         // let nonce = ORACLE::rand(); // ORACLE CALL (nonce not secure: would need to be better in production).
 
@@ -65,7 +65,7 @@ impl Note {
         // let randomness = 4; // Chosen by fair dice roll
         let nonce = 3;      // Guaranteed to be random
 
-        Note {
+        ValueNote {
             value,
             owner,
             randomness,
@@ -99,12 +99,12 @@ impl Note {
         dep::std::hash::pedersen([crate::Nullifier, note_hash, secret_key])[0]
     }
 
-    fn validate(self, sender: Point){
-        if self.is_real {
-            constrain sender.x == self.owner.x;
-            constrain sender.y == self.owner.y;
-        } else {
-            constrain self.value == 0;
-        }
-    }
+    // fn validate(self, sender: Point){
+    //     if self.is_real {
+    //         constrain sender.x == self.owner.x;
+    //         constrain sender.y == self.owner.y;
+    //     } else {
+    //         constrain self.value == 0;
+    //     }
+    // }
 }

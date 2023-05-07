@@ -1,6 +1,3 @@
-use crate::notes::value_note::Note;
-use crate::types::point::Point;
-
 #[oracle(storageRead)]
 fn storage_read_oracle(
     _storage_slot: Field,
