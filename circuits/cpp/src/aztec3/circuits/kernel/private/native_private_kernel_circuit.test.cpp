@@ -1,6 +1,9 @@
 #include "c_bind.h"
 #include "testing_harness.hpp"
 
+#include "aztec3/circuits/apps/test_apps/basic_contract_deployment/basic_contract_deployment.hpp"
+#include "aztec3/circuits/apps/test_apps/escrow/deposit.hpp"
+
 #include <barretenberg/common/test.hpp>
 
 #include <gtest/gtest.h>
@@ -12,8 +15,9 @@ namespace {
 using aztec3::circuits::apps::test_apps::basic_contract_deployment::constructor;
 using aztec3::circuits::apps::test_apps::escrow::deposit;
 
-using aztec3::circuits::kernel::private_kernel::testing_harness::do_private_call_get_kernel_inputs;
-using aztec3::circuits::kernel::private_kernel::testing_harness::validate_deployed_contract_address_;
+using aztec3::circuits::kernel::private_kernel::testing_harness::do_private_call_get_kernel_inputs_init;
+using aztec3::circuits::kernel::private_kernel::testing_harness::do_private_call_get_kernel_inputs_inner;
+using aztec3::circuits::kernel::private_kernel::testing_harness::validate_deployed_contract_address;
 
 }  // namespace
 
@@ -32,7 +36,7 @@ TEST(native_private_kernel_tests, native_deposit)
     DummyComposer composer = DummyComposer("private_kernel_tests__native_deposit");
     auto const& public_inputs = native_private_kernel_circuit(composer, private_inputs);
 
-    EXPECT_TRUE(validate_deployed_contract_address_(private_inputs, public_inputs));
+    EXPECT_TRUE(validate_deployed_contract_address(private_inputs, public_inputs));
 }
 
 /**
@@ -48,7 +52,7 @@ TEST(native_private_kernel_tests, native_basic_contract_deployment)
     DummyComposer composer = DummyComposer("private_kernel_tests__native_basic_contract_deployment");
     auto const& public_inputs = native_private_kernel_circuit(composer, private_inputs);
 
-    EXPECT_TRUE(validate_deployed_contract_address_(private_inputs, public_inputs));
+    EXPECT_TRUE(validate_deployed_contract_address(private_inputs, public_inputs));
 }
 
 TEST(native_private_kernel_tests, native_contract_deployment_incorrect_constructor_vk_hash_fails)

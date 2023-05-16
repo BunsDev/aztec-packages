@@ -1,28 +1,14 @@
 #include "index.hpp"
 #include "init.hpp"
 
+#include "aztec3/circuits/abis/contract_deployment_data.hpp"
+#include "aztec3/circuits/abis/kernel_circuit_public_inputs.hpp"
+#include "aztec3/circuits/abis/private_circuit_public_inputs.hpp"
+#include "aztec3/circuits/abis/private_kernel/private_call_data.hpp"
+#include "aztec3/circuits/abis/private_kernel/private_kernel_inputs_init.hpp"
+#include "aztec3/circuits/abis/private_kernel/private_kernel_inputs_inner.hpp"
+#include "aztec3/circuits/hash.hpp"
 #include "aztec3/circuits/kernel/private/utils.hpp"
-#include "aztec3/constants.hpp"
-#include <aztec3/circuits/abis/call_context.hpp>
-#include <aztec3/circuits/abis/call_stack_item.hpp>
-#include <aztec3/circuits/abis/combined_accumulated_data.hpp>
-#include <aztec3/circuits/abis/combined_constant_data.hpp>
-#include <aztec3/circuits/abis/contract_deployment_data.hpp>
-#include <aztec3/circuits/abis/function_data.hpp>
-#include <aztec3/circuits/abis/kernel_circuit_public_inputs.hpp>
-#include <aztec3/circuits/abis/private_circuit_public_inputs.hpp>
-#include <aztec3/circuits/abis/private_historic_tree_roots.hpp>
-#include <aztec3/circuits/abis/private_kernel/globals.hpp>
-#include <aztec3/circuits/abis/private_kernel/private_inputs.hpp>
-#include <aztec3/circuits/abis/signed_tx_request.hpp>
-#include <aztec3/circuits/abis/tx_context.hpp>
-#include <aztec3/circuits/abis/tx_request.hpp>
-#include <aztec3/circuits/abis/types.hpp>
-#include <aztec3/circuits/apps/function_execution_context.hpp>
-#include <aztec3/circuits/apps/test_apps/basic_contract_deployment/basic_contract_deployment.hpp>
-#include <aztec3/circuits/apps/test_apps/escrow/deposit.hpp>
-#include <aztec3/circuits/hash.hpp>
-#include <aztec3/circuits/mock/mock_kernel_circuit.hpp>
 
 #include <barretenberg/common/map.hpp>
 #include <barretenberg/stdlib/merkle_tree/membership.hpp>
@@ -31,11 +17,15 @@
 namespace {
 
 using aztec3::circuits::compute_empty_sibling_path;
+using aztec3::circuits::abis::ContractDeploymentData;
 using aztec3::circuits::abis::FunctionLeafPreimage;
 using aztec3::circuits::abis::KernelCircuitPublicInputs;
 using aztec3::circuits::abis::NewContractData;
 using aztec3::circuits::abis::OptionalPrivateCircuitPublicInputs;
-using aztec3::circuits::abis::private_kernel::PrivateInputs;
+using aztec3::circuits::abis::private_kernel::PrivateCallData;
+using aztec3::circuits::abis::private_kernel::PrivateKernelInputsInit;
+using aztec3::circuits::abis::private_kernel::PrivateKernelInputsInner;
+
 
 using DummyComposer = aztec3::utils::DummyComposer;
 
@@ -87,17 +77,45 @@ inline const auto& get_empty_contract_siblings()
 std::shared_ptr<NT::VK> gen_func_vk(bool is_constructor, private_function const& func, size_t num_args);
 
 /**
- * @brief Perform a private circuit call and generate the inputs to private kernel
+ * @brief Create a private call deploy data object
+ *
+ * @param is_constructor Whether this private call is a constructor call
+ * @param func The private circuit (i.e. constructor in case of contract deployment) call
+ * @param args_vec Number of args to that private circuit call
+ * @param msg_sender The sender of the transaction request
+ * @return std::pair<PrivateCallData<NT>, ContractDeploymentData<NT>> - the generated private call data with the
+ * contract deployment data
+ */
+std::pair<PrivateCallData<NT>, ContractDeploymentData<NT>> create_private_call_deploy_data(
+    bool is_constructor,
+    private_function const& func,
+    std::vector<NT::fr> const& args_vec,
+    NT::address const& msg_sender);
+
+/**
+ * @brief Perform a private circuit call and generate the inputs to private kernel inner circuit
  *
  * @param is_constructor whether this private circuit call is a constructor
  * @param func the private circuit call being validated by this kernel iteration
  * @param args_vec the private call's args
- * @return PrivateInputs<NT> - the inputs to the private call circuit
+ * @return PrivateKernelInputsInner<NT> - the inputs to the private kernel inner circuit
  */
-PrivateInputs<NT> do_private_call_get_kernel_inputs(bool is_constructor,
-                                                    private_function const& func,
-                                                    std::vector<NT::fr> const& args_vec,
-                                                    bool real_kernel_circuit = false);
+PrivateKernelInputsInner<NT> do_private_call_get_kernel_inputs_inner(bool is_constructor,
+                                                                     private_function const& func,
+                                                                     std::vector<NT::fr> const& args_vec,
+                                                                     bool real_kernel_circuit = false);
+
+/**
+ * @brief Perform a private circuit call and generate the inputs to private kernel init circuit
+ *
+ * @param is_constructor whether this private circuit call is a constructor
+ * @param func the private circuit call being validated by this kernel iteration
+ * @param args_vec the private call's args
+ * @return PrivateKernelInputsInit<NT> - the inputs to the private kernel init circuit
+ */
+PrivateKernelInputsInit<NT> do_private_call_get_kernel_inputs_init(bool is_constructor,
+                                                                   private_function const& func,
+                                                                   std::vector<NT::fr> const& args_vec);
 
 /**
  * @brief Validate that the deployed contract address is correct.
@@ -106,8 +124,17 @@ PrivateInputs<NT> do_private_call_get_kernel_inputs(bool is_constructor,
  * with one manually computed from private inputs.
  * @param private_inputs to be used in manual computation
  * @param public_inputs that contain the expected new contract address
+ * @return true or false
  */
-bool validate_deployed_contract_address_(PrivateInputs<NT> const& private_inputs,
-                                         KernelCircuitPublicInputs<NT> const& public_inputs);
+bool validate_deployed_contract_address(PrivateKernelInputsInit<NT> const& private_inputs,
+                                        KernelCircuitPublicInputs<NT> const& public_inputs);
+
+/**
+ * @brief Checks if there is no newly deployed contract
+ *
+ * @param public_inputs that contain the expected new contract deployment data
+ * @return true or false
+ */
+bool validate_no_new_deployed_contract(KernelCircuitPublicInputs<NT> const& public_inputs);
 
 }  // namespace aztec3::circuits::kernel::private_kernel::testing_harness
