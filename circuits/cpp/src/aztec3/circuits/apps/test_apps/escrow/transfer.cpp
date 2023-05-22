@@ -96,10 +96,6 @@ OptionalPrivateCircuitPublicInputs<NT> transfer(FunctionExecutionContext& exec_c
     public_inputs.args[4] = CT::fr(reveal_msg_sender_to_recipient);
     public_inputs.args[5] = fee;
 
-    // Emit events
-    public_inputs.emitted_events[0] = CT::fr::copy_as_new_witness(composer, fee);
-    public_inputs.emitted_events[1] = CT::fr::copy_as_new_witness(composer, asset_id);
-
     /// TODO: merkle membership check
     // public_inputs.historic_private_data_tree_root
 

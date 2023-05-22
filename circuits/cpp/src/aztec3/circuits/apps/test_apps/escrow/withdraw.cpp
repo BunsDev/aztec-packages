@@ -87,11 +87,6 @@ OptionalPrivateCircuitPublicInputs<NT> withdraw(FunctionExecutionContext& exec_c
     public_inputs.args[3] = l1_withdrawal_address;
     public_inputs.args[4] = fee;
 
-    // Emit events
-    public_inputs.emitted_events[0] = CT::fr::copy_as_new_witness(composer, l1_withdrawal_address);
-    public_inputs.emitted_events[1] = CT::fr::copy_as_new_witness(composer, asset_id);
-    public_inputs.emitted_events[2] = CT::fr::copy_as_new_witness(composer, fee);
-
     exec_ctx.finalise();
 
     /// TODO: merkle membership check
