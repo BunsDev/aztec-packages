@@ -11,6 +11,10 @@
 
 #include <barretenberg/stdlib/merkle_tree/membership.hpp>
 
+// Note: imported because of compute_calldata_hash which is the functionality I use to compute logs hashes.
+// --> should the functionality be moved somewhere else?
+#include "aztec3/circuits/rollup/components/components.hpp"
+
 namespace aztec3::circuits::kernel::private_kernel {
 
 using aztec3::circuits::abis::ContractLeafPreimage;
@@ -69,6 +73,12 @@ void initialise_end_values(PrivateInputs<NT> const& private_inputs, KernelCircui
     end.private_call_stack = start.private_call_stack;
     end.public_call_stack = start.public_call_stack;
     end.new_l2_to_l1_msgs = start.new_l2_to_l1_msgs;
+
+    end.encrypted_logs_hash = start.encrypted_logs_hash;
+    end.unencrypted_logs_hash = start.unencrypted_logs_hash;
+
+    end.encrypted_log_preimages_length = start.encrypted_log_preimages_length;
+    end.unencrypted_log_preimages_length = start.unencrypted_log_preimages_length;
 
     end.optionally_revealed_data = start.optionally_revealed_data;
 }
@@ -268,6 +278,32 @@ void update_end_values(DummyComposer& composer,
             }
         }
         push_array_to_array(new_l2_to_l1_msgs_to_insert, public_inputs.end.new_l2_to_l1_msgs);
+    }
+
+    {  // logs hashes
+        const auto& previous_encrypted_logs_hash = public_inputs.end.encrypted_logs_hash;
+        const auto& current_encrypted_logs_hash = private_call_public_inputs.encrypted_logs_hash;
+        public_inputs.end.encrypted_logs_hash =
+            rollup ::components::compute_calldata_hash({ previous_encrypted_logs_hash[0],
+                                                         previous_encrypted_logs_hash[1],
+                                                         current_encrypted_logs_hash[0],
+                                                         current_encrypted_logs_hash[1] });
+
+        const auto& previous_unencrypted_logs_hash = public_inputs.end.unencrypted_logs_hash;
+        const auto& current_unencrypted_logs_hash = private_call_public_inputs.unencrypted_logs_hash;
+        public_inputs.end.unencrypted_logs_hash =
+            rollup ::components::compute_calldata_hash({ previous_unencrypted_logs_hash[0],
+                                                         previous_unencrypted_logs_hash[1],
+                                                         current_unencrypted_logs_hash[0],
+                                                         current_unencrypted_logs_hash[1] });
+
+        // Add log preimages lengths from current iteration to accumulated lengths
+        // TODO: Is this correct? It's not clear to me from Mike's post.
+        public_inputs.end.encrypted_log_preimages_length = public_inputs.end.encrypted_log_preimages_length +
+                                                           private_call_public_inputs.encrypted_log_preimages_length;
+        public_inputs.end.unencrypted_log_preimages_length =
+            public_inputs.end.unencrypted_log_preimages_length +
+            private_call_public_inputs.unencrypted_log_preimages_length;
     }
 }
 
