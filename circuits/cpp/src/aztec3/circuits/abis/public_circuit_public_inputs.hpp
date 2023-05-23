@@ -28,8 +28,6 @@ template <typename NCT> struct PublicCircuitPublicInputs {
     std::array<fr, ARGS_LENGTH> args = zero_array<fr, ARGS_LENGTH>();
     std::array<fr, RETURN_VALUES_LENGTH> return_values = zero_array<fr, RETURN_VALUES_LENGTH>();
 
-    std::array<fr, EMITTED_EVENTS_LENGTH> emitted_events = zero_array<fr, EMITTED_EVENTS_LENGTH>();
-
     std::array<ContractStorageUpdateRequest<NCT>, KERNEL_PUBLIC_DATA_UPDATE_REQUESTS_LENGTH>
         contract_storage_update_requests{};
     std::array<ContractStorageRead<NCT>, KERNEL_PUBLIC_DATA_READS_LENGTH> contract_storage_reads{};
@@ -44,7 +42,6 @@ template <typename NCT> struct PublicCircuitPublicInputs {
     boolean operator==(PublicCircuitPublicInputs<NCT> const& other) const
     {
         return call_context == other.call_context && args == other.args && return_values == other.return_values &&
-               emitted_events == other.emitted_events &&
                contract_storage_update_requests == other.contract_storage_update_requests &&
                contract_storage_reads == other.contract_storage_reads && public_call_stack == other.public_call_stack &&
                new_l2_to_l1_msgs == other.new_l2_to_l1_msgs &&
@@ -66,8 +63,6 @@ template <typename NCT> struct PublicCircuitPublicInputs {
 
             .args = to_ct(args),
             .return_values = to_ct(return_values),
-
-            .emitted_events = to_ct(emitted_events),
 
             .contract_storage_update_requests = map(contract_storage_update_requests, to_circuit_type),
             .contract_storage_reads = map(contract_storage_reads, to_circuit_type),
@@ -96,8 +91,6 @@ template <typename NCT> struct PublicCircuitPublicInputs {
         spread_arr_into_vec(args, inputs);
         spread_arr_into_vec(return_values, inputs);
 
-        spread_arr_into_vec(emitted_events, inputs);
-
         spread_arr_into_vec(map(contract_storage_update_requests, to_hashes), inputs);
         spread_arr_into_vec(map(contract_storage_reads, to_hashes), inputs);
 
@@ -124,7 +117,6 @@ template <typename NCT> void read(uint8_t const*& it, PublicCircuitPublicInputs<
     read(it, pis.call_context);
     read(it, pis.args);
     read(it, pis.return_values);
-    read(it, pis.emitted_events);
 
     read(it, pis.contract_storage_update_requests);
     read(it, pis.contract_storage_reads);
@@ -147,7 +139,6 @@ void write(std::vector<uint8_t>& buf, PublicCircuitPublicInputs<NCT> const& publ
     write(buf, pis.call_context);
     write(buf, pis.args);
     write(buf, pis.return_values);
-    write(buf, pis.emitted_events);
 
     write(buf, pis.contract_storage_update_requests);
     write(buf, pis.contract_storage_reads);
@@ -168,7 +159,6 @@ std::ostream& operator<<(std::ostream& os, PublicCircuitPublicInputs<NCT> const&
     return os << "call_context: " << pis.call_context << "\n"
               << "args: " << pis.args << "\n"
               << "return_values: " << pis.return_values << "\n"
-              << "emitted_events: " << pis.emitted_events << "\n"
 
               << "contract_storage_update_requests: " << pis.contract_storage_update_requests << "\n"
               << "contract_storage_reads: " << pis.contract_storage_reads << "\n"

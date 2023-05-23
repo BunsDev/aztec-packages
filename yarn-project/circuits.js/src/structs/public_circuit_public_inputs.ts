@@ -3,7 +3,6 @@ import { FieldsOf, assertMemberLength } from '../utils/jsUtils.js';
 import { CallContext } from './call_context.js';
 import {
   ARGS_LENGTH,
-  EMITTED_EVENTS_LENGTH,
   NEW_L2_TO_L1_MSGS_LENGTH,
   PUBLIC_CALL_STACK_LENGTH,
   RETURN_VALUES_LENGTH,
@@ -148,10 +147,6 @@ export class PublicCircuitPublicInputs {
      */
     public returnValues: Fr[],
     /**
-     * Events emitted during the call.
-     */
-    public emittedEvents: Fr[],
-    /**
      * Contract storage update requests executed during the call.
      */
     public contractStorageUpdateRequests: ContractStorageUpdateRequest[],
@@ -178,7 +173,6 @@ export class PublicCircuitPublicInputs {
   ) {
     assertMemberLength(this, 'args', ARGS_LENGTH);
     assertMemberLength(this, 'returnValues', RETURN_VALUES_LENGTH);
-    assertMemberLength(this, 'emittedEvents', EMITTED_EVENTS_LENGTH);
     assertMemberLength(this, 'publicCallStack', PUBLIC_CALL_STACK_LENGTH);
     assertMemberLength(this, 'newL2ToL1Msgs', NEW_L2_TO_L1_MSGS_LENGTH);
     assertMemberLength(this, 'contractStorageUpdateRequests', KERNEL_PUBLIC_DATA_UPDATE_REQUESTS_LENGTH);
@@ -204,7 +198,6 @@ export class PublicCircuitPublicInputs {
       CallContext.empty(),
       frArray(ARGS_LENGTH),
       frArray(RETURN_VALUES_LENGTH),
-      frArray(EMITTED_EVENTS_LENGTH),
       times(KERNEL_PUBLIC_DATA_UPDATE_REQUESTS_LENGTH, ContractStorageUpdateRequest.empty),
       times(KERNEL_PUBLIC_DATA_READS_LENGTH, ContractStorageRead.empty),
       frArray(PUBLIC_CALL_STACK_LENGTH),
@@ -220,7 +213,6 @@ export class PublicCircuitPublicInputs {
       this.callContext.isEmpty() &&
       isFrArrayEmpty(this.args) &&
       isFrArrayEmpty(this.returnValues) &&
-      isFrArrayEmpty(this.emittedEvents) &&
       isArrayEmpty(this.contractStorageUpdateRequests, item => item.isEmpty()) &&
       isArrayEmpty(this.contractStorageReads, item => item.isEmpty()) &&
       isFrArrayEmpty(this.publicCallStack) &&
@@ -240,7 +232,6 @@ export class PublicCircuitPublicInputs {
       fields.callContext,
       fields.args,
       fields.returnValues,
-      fields.emittedEvents,
       fields.contractStorageUpdateRequests,
       fields.contractStorageReads,
       fields.publicCallStack,

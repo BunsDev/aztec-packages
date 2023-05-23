@@ -4,7 +4,6 @@ import {
   ARGS_LENGTH,
   CallContext,
   ContractDeploymentData,
-  EMITTED_EVENTS_LENGTH,
   NEW_L2_TO_L1_MSGS_LENGTH,
   NEW_COMMITMENTS_LENGTH,
   NEW_NULLIFIERS_LENGTH,
@@ -121,12 +120,16 @@ export function extractPublicInputs(partialWitness: ACVMWitness, acir: Buffer): 
 
   const args = witnessReader.readFieldArray(ARGS_LENGTH);
   const returnValues = witnessReader.readFieldArray(RETURN_VALUES_LENGTH);
-  const emittedEvents = witnessReader.readFieldArray(EMITTED_EVENTS_LENGTH);
   const newCommitments = witnessReader.readFieldArray(NEW_COMMITMENTS_LENGTH);
   const newNullifiers = witnessReader.readFieldArray(NEW_NULLIFIERS_LENGTH);
   const privateCallStack = witnessReader.readFieldArray(PRIVATE_CALL_STACK_LENGTH);
   const publicCallStack = witnessReader.readFieldArray(PUBLIC_CALL_STACK_LENGTH);
   const newL2ToL1Msgs = witnessReader.readFieldArray(NEW_L2_TO_L1_MSGS_LENGTH);
+
+  const encryptedLogsHash = witnessReader.readFieldArray(2);
+  const unencryptedLogsHash = witnessReader.readFieldArray(2);
+  const encryptedLogPreimagesLength = witnessReader.readField();
+  const unencryptedLogPreimagesLength = witnessReader.readField();
 
   const privateDataTreeRoot = witnessReader.readField();
   const nullifierTreeRoot = witnessReader.readField();
@@ -144,12 +147,15 @@ export function extractPublicInputs(partialWitness: ACVMWitness, acir: Buffer): 
     callContext,
     args,
     returnValues,
-    emittedEvents,
     newCommitments,
     newNullifiers,
     privateCallStack,
     publicCallStack,
     newL2ToL1Msgs,
+    encryptedLogsHash,
+    unencryptedLogsHash,
+    encryptedLogPreimagesLength,
+    unencryptedLogPreimagesLength,
     privateDataTreeRoot,
     nullifierTreeRoot,
     contractTreeRoot,
