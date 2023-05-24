@@ -5,7 +5,7 @@ global MAX_NEW_NULLIFIERS: comptime Field = 4;
 global MAX_PRIVATE_CALL_STACK : comptime Field = 4;
 global MAX_PUBLIC_CALL_STACK: comptime Field = 4;
 global MAX_L1_MSG_STACK : comptime Field = 2;
-global PUBLIC_INPUTS_LENGTH : comptime Field = 48;
+global PUBLIC_INPUTS_LENGTH : comptime Field = 50;
 global CONTRACT_STORAGE_UPDATE_REQUESTS_LENGTH : comptime Field = 4;
 global CONTRACT_STORAGE_READS_LENGTH : comptime Field = 4;
 
