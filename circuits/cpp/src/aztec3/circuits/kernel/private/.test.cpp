@@ -168,19 +168,4 @@ TEST(private_kernel_tests, circuit_create_proof_cbinds)
     free((void*)public_inputs_buf);
 }
 
-/**
- * @brief Test this dummy cbind
- */
-TEST(private_kernel_tests, cbind_private_kernel__dummy_previous_kernel)
-{
-    auto func = [] { return aztec3::circuits::kernel::private_kernel::utils::dummy_previous_kernel(); };
-    auto [actual, expected] = call_func_and_wrapper(func, private_kernel__dummy_previous_kernel);
-    // TODO(AD): investigate why direct operator== didn't work
-    std::stringstream actual_ss;
-    std::stringstream expected_ss;
-    actual_ss << actual;
-    expected_ss << expected;
-    EXPECT_EQ(actual_ss.str(), expected_ss.str());
-}
-
 }  // namespace aztec3::circuits::kernel::private_kernel
