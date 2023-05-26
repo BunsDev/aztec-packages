@@ -163,7 +163,7 @@ KernelCircuitPublicInputs<NT> native_private_kernel_circuit_initial(DummyCompose
 
     // TODO(dbanks12): may need to comment out hash check in here according to TODO above
     // TODO(jeanmon) FIXME - https://github.com/AztecProtocol/aztec-packages/issues/671
-    // common_validate_call_stack(composer, private_inputs.private_call);
+    common_validate_call_stack(composer, private_inputs.private_call);
 
     update_end_values(private_inputs, public_inputs);
 
